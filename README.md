@@ -23,7 +23,7 @@ Learn: Read the rich definitions that go beyond simple meanings
 🛠️ Technical Details
 
 Format: Simple JSON key-value pairs ("word": "definition")
-Size: Currently 16.8MB+ with 30,760+ entries
+Size: Currently 29.1MB+ with 52300+ entries
 Technology: Pure HTML/CSS/JavaScript - no frameworks needed
 Hosting: GitHub Pages for free, reliable hosting
 Search: Client-side search for instant results
@@ -106,4 +106,5 @@ Include more cross-references between related terms
 This dictionary is a personal collection compiled with care and dedication to the beauty of language.
 
 "Language is the dress of thought." - Samuel Johnson
+
 Created with ❤️ by a lover of words and their meanings
