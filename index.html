@@ -3,652 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dictionary of Good Meaning Words</title>
+    <title>Good Dictionary</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        h1 {
-            text-align: center;
-            color: white;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .upload-section {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .file-input-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
-
-        input[type="file"] {
-            background: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px;
-            cursor: pointer;
-        }
-
-        .auto-load-btn, .load-btn {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: transform 0.2s;
-        }
-
-        .auto-load-btn:hover, .load-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .loading-container {
-            display: none;
-            text-align: center;
-            color: white;
-            margin: 20px 0;
-        }
-
-        .loading-spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid white;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 3px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4CAF50, #45a049);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .search-section {
-            display: none;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .search-container {
-            position: relative;
-            margin-bottom: 15px;
-        }
-
-        #searchInput {
-            width: 100%;
-            padding: 15px 20px;
-            font-size: 18px;
-            border: none;
-            border-radius: 25px;
-            background: rgba(255, 255, 255, 0.9);
-            outline: none;
-            transition: box-shadow 0.3s;
-        }
-
-        #searchInput:focus {
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
-        }
-
-        .search-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .search-status {
-            color: #ffeb3b;
-            font-weight: bold;
-        }
-
-        .results-container {
-            max-height: 600px;
-            overflow-y: auto;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 15px;
-        }
-
-        .result-item {
-            background: rgba(255, 255, 255, 0.9);
-            margin-bottom: 15px;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .result-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-        }
-
-        .word-title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 10px;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 5px;
-        }
-
-        .word-definition {
-            font-size: 16px;
-            line-height: 1.6;
-            color: #34495e;
-        }
-
-        .priority-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-
-        .priority-1 { background: #e74c3c; color: white; }
-        .priority-2 { background: #f39c12; color: white; }
-        .priority-3 { background: #f1c40f; color: #333; }
-        .priority-4 { background: #3498db; color: white; }
-        .priority-5 { background: #95a5a6; color: white; }
-
-        .no-results {
-            text-align: center;
-            color: white;
-            font-size: 18px;
-            padding: 40px;
-        }
-
-        .stats {
-            text-align: center;
-            color: white;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-
-        /* Responsive design */
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-                margin: 10px;
-            }
-
-            h1 {
-                font-size: 2em;
-            }
-
-            .search-info {
-                flex-direction: column;
-                gap: 5px;
-                text-align: center;
-            }
-        }
-    </style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: #0a0a2a;
+        color: #e0f7fa;
+        min-height: 100vh;
+        padding: 20px;
+    }
+    .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: rgba(10,20,40,0.3);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid rgba(79,195,247,0.3);
+    }
+    h1 {
+        text-align: center;
+        color: #4fc3f7;
+        margin-bottom: 30px;
+        font-size: 2.5em;
+    }
+    .loading-container {
+        text-align: center;
+        color: #4fc3f7;
+        padding: 60px 0;
+    }
+    .loading-spinner {
+        border: 4px solid rgba(79,195,247,0.3);
+        border-top: 4px solid #4fc3f7;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .search-section {
+        display: none;
+    }
+    #searchInput {
+        width: 100%;
+        padding: 15px 20px;
+        font-size: 18px;
+        border: none;
+        border-radius: 25px;
+        background: rgba(255,255,255,0.15);
+        color: #e0f7fa;
+        outline: none;
+    }
+    .search-info {
+        display: flex;
+        justify-content: space-between;
+        color: #81d4fa;
+        font-size: 14px;
+        margin: 10px 0;
+    }
+    .results-container {
+        max-height: 600px;
+        overflow-y: auto;
+        background: rgba(10,20,40,0.4);
+        border-radius: 10px;
+        padding: 15px;
+    }
+    .result-item {
+        background: rgba(255,255,255,0.1);
+        margin-bottom: 15px;
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid rgba(79,195,247,0.2);
+    }
+    .word-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #81d4fa;
+        margin-bottom: 10px;
+        border-bottom: 2px solid #1976d2;
+        padding-bottom: 5px;
+    }
+    .word-definition {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #b3e5fc;
+        margin-top: 8px;
+    }
+    .no-results {
+        text-align: center;
+        color: #7ecfff;
+        padding: 40px;
+        font-style: italic;
+    }
+    .edit-controls {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .btn-web-search { background: #2196F3; color: white; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+</style>
 </head>
 <body>
     <div class="container">
-        <h1>📚 Dictionary of Good Meaning Words</h1>
+        <h1>📘 Good Dictionary</h1>
 
-        <div class="upload-section">
-            <div class="file-input-container">
-                <input type="file" id="fileInput" accept=".json" />
-                <button class="load-btn" onclick="loadSelectedFile()">Load Dictionary File</button>
-                <button class="auto-load-btn" onclick="autoLoadDictionary()">Auto-Load Dictionary1.json</button>
-            </div>
-
-            <div class="loading-container" id="loadingContainer">
-                <div class="loading-spinner"></div>
-                <div id="loadingText">Loading dictionary...</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <div id="loadingStats"></div>
-            </div>
+        <div class="loading-container" id="loadingContainer">
+            <div class="loading-spinner"></div>
+            <div>Loading Dictionary1.json...</div>
         </div>
 
         <div class="search-section" id="searchSection">
-            <div class="search-container">
-                <input type="text" id="searchInput" placeholder="Search for words or definitions... (minimum 2 characters)" />
-            </div>
-            
+            <input type="text" id="searchInput" placeholder="Search for words or definitions... (minimum 2 characters)" />
             <div class="search-info">
-                <span id="searchStatus" class="search-status">Ready to search</span>
+                <span id="searchStatus">Ready to search</span>
                 <span id="wordCount">Total words: 0</span>
             </div>
-
             <div class="results-container" id="resultsContainer">
                 <div class="no-results">Enter a search term to find words and definitions</div>
             </div>
 
-            <div class="stats" id="searchStats"></div>
+            <div class="edit-controls">
+                <button class="btn btn-web-search" onclick="researchWord()">🌍 Research</button>
+                <button class="btn btn-web-search" onclick="enrichWord()">🔢 Enrich</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Global variables
         let dictionary = {};
         let searchWorker = null;
-        let searchTimeout = null;
-        let isLoading = false;
-        let loadProgress = 0;
+        let lastQuery = '';
 
-        // Performance monitoring
-        const performanceMonitor = {
-            searchTimes: [],
-            averageSearchTime: 0,
-            
-            recordSearchTime(time) {
-                this.searchTimes.push(time);
-                if (this.searchTimes.length > 10) {
-                    this.searchTimes.shift();
-                }
-                this.averageSearchTime = this.searchTimes.reduce((a, b) => a + b, 0) / this.searchTimes.length;
-            }
-        };
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('Dictionary1.json')
+                .then(r => r.ok ? r.json() : Promise.reject('File not found'))
+                .then(data => {
+                    dictionary = data;
 
-        // Initialize Web Worker for search processing
-        function initializeSearchWorker() {
-            const workerCode = `
-                let dictionary = {};
-                
-                self.onmessage = function(e) {
-                    const { type, data } = e.data;
-                    
-                    if (type === 'SET_DICTIONARY') {
-                        dictionary = data;
-                        self.postMessage({ type: 'DICTIONARY_SET', success: true });
-                        return;
-                    }
-                    
-                    if (type === 'SEARCH') {
-                        const { query } = data;
-                        const results = performSearch(query);
-                        self.postMessage({ 
-                            type: 'SEARCH_RESULTS', 
-                            results: results,
-                            query: query 
-                        });
-                        return;
-                    }
-                };
-                
-                function performSearch(query) {
-                    if (!query || query.length < 2) return [];
-                    
-                    const searchTerm = query.toLowerCase().trim();
-                    const results = [];
-                    
-                    // Search through dictionary
-                    for (const [word, definition] of Object.entries(dictionary)) {
-                        const wordLower = word.toLowerCase();
-                        const defLower = definition.toLowerCase();
-                        let priority = 0;
-                        let matchType = '';
-                        
-                        // Priority 1: Exact word match
-                        if (wordLower === searchTerm) {
-                            priority = 1;
-                            matchType = 'Exact Match';
+                    // Lightweight Web Worker
+                    const workerCode = URL.createObjectURL(new Blob([`
+                        let dict = {};
+                        self.onmessage = function(e) {
+                            if (e.data.type === 'SET') { dict = e.data.dict; return; }
+                            if (e.data.type === 'SEARCH') {
+                                const q = e.data.query.trim();
+                                if (q.length < 2) { self.postMessage({results:[]}); return; }
+                                const ql = q.toLowerCase();
+                                const matches = [];
+                                // Only collect top 50
+                                for (let [word, def] of Object.entries(dict)) {
+                                    const wl = word.toLowerCase();
+                                    const dl = def.toLowerCase();
+                                    let p = 0;
+                                    if (word === q) p = 1;
+                                    else if (wl === ql) p = 2;
+                                    else if (wl.startsWith(ql)) p = 3;
+                                    else if (wl.includes(ql)) p = 4;
+                                    else if (dl.includes(ql)) p = 5;
+                                    if (p) matches.push({word, def, p});
+                                    if (matches.length > 100) break; // Limit early
+                                }
+                                // Sort: priority, then alphabetically (case preserved)
+                                matches.sort((a,b) => a.p - b.p || a.word.localeCompare(b.word, undefined, {sensitivity:'base'}));
+                                self.postMessage({ results: matches.slice(0, 50), query: q });
+                            }
                         }
-                        // Priority 2: Word starts with search term
-                        else if (wordLower.startsWith(searchTerm)) {
-                            priority = 2;
-                            matchType = 'Starts With';
+                    `], { type: 'application/javascript' }));
+
+                    searchWorker = new Worker(workerCode);
+                    searchWorker.onmessage = e => displayResults(e.data.results, e.data.query);
+                    searchWorker.postMessage({ type: 'SET', dict: dictionary });
+
+                    // Hide loading, show UI
+                    document.getElementById('loadingContainer').style.display = 'none';
+                    document.getElementById('searchSection').style.display = 'block';
+                    document.getElementById('wordCount').textContent = `Total words: ${Object.keys(dictionary).length.toLocaleString()}`;
+                    const input = document.getElementById('searchInput');
+                    input.focus();
+
+                    // Instant search on input
+                    input.addEventListener('input', e => {
+                        const q = e.target.value;
+                        if (q.length < 2) {
+                            document.getElementById('resultsContainer').innerHTML = '<div class="no-results">Enter at least 2 characters</div>';
+                            document.getElementById('searchStatus').textContent = 'Ready to search';
+                            return;
                         }
-                        // Priority 3: Word contains search term
-                        else if (wordLower.includes(searchTerm)) {
-                            priority = 3;
-                            matchType = 'Word Contains';
+                        document.getElementById('searchStatus').textContent = 'Searching...';
+                        // No debounce — instant search
+                        if (q !== lastQuery) {
+                            lastQuery = q;
+                            searchWorker.postMessage({ type: 'SEARCH', query: q });
                         }
-                        // Priority 4: Definition contains whole word
-                        else if (new RegExp('\\\\b' + searchTerm + '\\\\b', 'i').test(defLower)) {
-                            priority = 4;
-                            matchType = 'Definition Match';
-                        }
-                        // Priority 5: Definition contains partial match
-                        else if (defLower.includes(searchTerm)) {
-                            priority = 5;
-                            matchType = 'Definition Contains';
-                        }
-                        
-                        if (priority > 0) {
-                            results.push({
-                                word,
-                                definition,
-                                priority,
-                                matchType
-                            });
-                        }
-                    }
-                    
-                    // Sort by priority (lower number = higher priority)
-                    results.sort((a, b) => {
-                        if (a.priority !== b.priority) {
-                            return a.priority - b.priority;
-                        }
-                        // Secondary sort by alphabetical order
-                        return a.word.localeCompare(b.word);
                     });
-                    
-                    return results.slice(0, 100); // Limit results for performance
-                }
-            `;
-            
-            const blob = new Blob([workerCode], { type: 'application/javascript' });
-            searchWorker = new Worker(URL.createObjectURL(blob));
-            
-            searchWorker.onmessage = function(e) {
-                const { type, results, query } = e.data;
-                
-                if (type === 'SEARCH_RESULTS') {
-                    displayResults(results, query);
-                }
-            };
-        }
+                })
+                .catch(err => {
+                    document.getElementById('loadingContainer').innerHTML = `<div style="color:#f44336">Error: ${err.message}</div>`;
+                });
+        });
 
-        // Enhanced loading with progress tracking
-        async function loadDictionaryWithProgress(data) {
-            return new Promise((resolve) => {
-                const loadingContainer = document.getElementById('loadingContainer');
-                const loadingText = document.getElementById('loadingText');
-                const progressFill = document.getElementById('progressFill');
-                const loadingStats = document.getElementById('loadingStats');
-                
-                loadingContainer.style.display = 'block';
-                
-                // Simulate chunked processing for better UX
-                const entries = Object.entries(data);
-                const totalEntries = entries.length;
-                const chunkSize = Math.ceil(totalEntries / 20); // 20 chunks for smooth progress
-                let processedEntries = 0;
-                
-                function processChunk(startIndex) {
-                    const endIndex = Math.min(startIndex + chunkSize, totalEntries);
-                    
-                    for (let i = startIndex; i < endIndex; i++) {
-                        const [word, definition] = entries[i];
-                        dictionary[word] = definition;
-                        processedEntries++;
-                    }
-                    
-                    const progress = (processedEntries / totalEntries) * 100;
-                    progressFill.style.width = progress + '%';
-                    loadingStats.textContent = `Processed ${processedEntries.toLocaleString()} / ${totalEntries.toLocaleString()} words`;
-                    
-                    if (endIndex < totalEntries) {
-                        // Schedule next chunk
-                        setTimeout(() => processChunk(endIndex), 50);
-                    } else {
-                        // Loading complete
-                        loadingText.textContent = 'Finalizing...';
-                        setTimeout(() => {
-                            loadingContainer.style.display = 'none';
-                            resolve(dictionary);
-                        }, 500);
-                    }
-                }
-                
-                // Start processing
-                processChunk(0);
-            });
-        }
-
-        // Auto-load dictionary function
-        async function autoLoadDictionary() {
-            if (isLoading) return;
-            
-            isLoading = true;
-            const loadingContainer = document.getElementById('loadingContainer');
-            const loadingText = document.getElementById('loadingText');
-            
-            try {
-                loadingContainer.style.display = 'block';
-                loadingText.textContent = 'Fetching Dictionary1.json...';
-                
-                const response = await fetch('Dictionary1.json');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                loadingText.textContent = 'Parsing JSON data...';
-                const data = await response.json();
-                
-                loadingText.textContent = 'Processing dictionary entries...';
-                dictionary = await loadDictionaryWithProgress(data);
-                
-                // Initialize search worker
-                if (!searchWorker) {
-                    initializeSearchWorker();
-                }
-                
-                // Send dictionary to worker
-                searchWorker.postMessage({ type: 'SET_DICTIONARY', data: dictionary });
-                
-                // Show search interface
-                document.getElementById('searchSection').style.display = 'block';
-                document.getElementById('wordCount').textContent = `Total words: ${Object.keys(dictionary).length.toLocaleString()}`;
-                document.getElementById('searchInput').focus();
-                
-                console.log('Dictionary loaded successfully:', Object.keys(dictionary).length, 'entries');
-                
-            } catch (error) {
-                loadingContainer.style.display = 'none';
-                alert(`Error loading dictionary: ${error.message}\n\nPlease make sure Dictionary1.json is in the same folder as this HTML file.`);
-                console.error('Error loading dictionary:', error);
-            }
-            
-            isLoading = false;
-        }
-
-        // Load selected file function
-        async function loadSelectedFile() {
-            if (isLoading) return;
-            
-            const fileInput = document.getElementById('fileInput');
-            const file = fileInput.files[0];
-            
-            if (!file) {
-                alert('Please select a JSON file first.');
-                return;
-            }
-            
-            isLoading = true;
-            const loadingContainer = document.getElementById('loadingContainer');
-            const loadingText = document.getElementById('loadingText');
-            
-            try {
-                loadingContainer.style.display = 'block';
-                loadingText.textContent = `Loading ${file.name}...`;
-                
-                const text = await file.text();
-                const data = JSON.parse(text);
-                
-                loadingText.textContent = 'Processing dictionary entries...';
-                dictionary = await loadDictionaryWithProgress(data);
-                
-                // Initialize search worker
-                if (!searchWorker) {
-                    initializeSearchWorker();
-                }
-                
-                // Send dictionary to worker
-                searchWorker.postMessage({ type: 'SET_DICTIONARY', data: dictionary });
-                
-                // Show search interface
-                document.getElementById('searchSection').style.display = 'block';
-                document.getElementById('wordCount').textContent = `Total words: ${Object.keys(dictionary).length.toLocaleString()}`;
-                document.getElementById('searchInput').focus();
-                
-                console.log('Dictionary loaded successfully:', Object.keys(dictionary).length, 'entries');
-                
-            } catch (error) {
-                loadingContainer.style.display = 'none';
-                alert(`Error loading file: ${error.message}`);
-                console.error('Error loading file:', error);
-            }
-            
-            isLoading = false;
-        }
-
-        // Debounced search function
-        function debouncedSearch() {
-            const query = document.getElementById('searchInput').value;
-            const statusElement = document.getElementById('searchStatus');
-            
-            // Clear previous timeout
-            if (searchTimeout) {
-                clearTimeout(searchTimeout);
-            }
-            
-            // Clear results if query is too short
-            if (query.length < 2) {
-                document.getElementById('resultsContainer').innerHTML = 
-                    '<div class="no-results">Enter at least 2 characters to search</div>';
-                statusElement.textContent = 'Ready to search';
-                document.getElementById('searchStats').textContent = '';
-                return;
-            }
-            
-            // Show searching status immediately
-            statusElement.textContent = 'Searching...';
-            
-            // Set timeout for actual search
-            searchTimeout = setTimeout(() => {
-                performSearch(query);
-            }, 300); // 300ms debounce delay
-        }
-
-        // Perform search using Web Worker
-        function performSearch(query) {
-            if (!searchWorker || !dictionary || Object.keys(dictionary).length === 0) {
-                console.error('Dictionary not loaded or search worker not initialized');
-                return;
-            }
-            
-            const startTime = performance.now();
-            searchWorker.postMessage({ type: 'SEARCH', data: { query } });
-        }
-
-        // Display search results
         function displayResults(results, query) {
-            const endTime = performance.now();
-            const searchTime = endTime - performance.now() + 300; // Approximate
-            performanceMonitor.recordSearchTime(searchTime);
-            
             const container = document.getElementById('resultsContainer');
-            const statusElement = document.getElementById('searchStatus');
-            const statsElement = document.getElementById('searchStats');
-            
+            const status = document.getElementById('searchStatus');
+
             if (results.length === 0) {
-                container.innerHTML = '<div class="no-results">No results found for "' + query + '"</div>';
-                statusElement.textContent = 'No results';
-                statsElement.textContent = '';
+                container.innerHTML = `<div class="no-results">No results for "${query}"</div>`;
+                status.textContent = 'No results';
                 return;
             }
-            
-            // Update status
-            statusElement.textContent = `Found ${results.length} results`;
-            statsElement.textContent = `Search completed in ~${Math.round(performanceMonitor.averageSearchTime)}ms (avg)`;
-            
-            // Render results
-            const html = results.map(result => `
+
+            status.textContent = `Found ${results.length} results`;
+            container.innerHTML = results.map(r => `
                 <div class="result-item">
-                    <div class="word-title">
-                        ${result.word}
-                        <span class="priority-badge priority-${result.priority}">${result.matchType}</span>
+                    <div class="word-title">${r.word}</div>
+                    <div class="word-definition">${r.def}</div>
+                    <div class="edit-controls">
+                        <button class="btn btn-web-search" onclick="researchWord('${r.word}')">🌍 Research</button>
+                        <button class="btn btn-web-search" onclick="enrichWord('${r.word}')">🔢 Enrich</button>
                     </div>
-                    <div class="word-definition">${result.definition}</div>
                 </div>
             `).join('');
-            
-            container.innerHTML = html;
-            
-            console.log(`Search for "${query}": ${results.length} results in ~${searchTime}ms`);
         }
 
-        // Event listeners
-        document.getElementById('searchInput').addEventListener('input', debouncedSearch);
-        document.getElementById('searchInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                // Immediate search on Enter
-                if (searchTimeout) clearTimeout(searchTimeout);
-                const query = this.value;
-                if (query.length >= 2) {
-                    performSearch(query);
-                }
-            }
-        });
+        function researchWord(term = '') {
+            const q = term || document.getElementById('searchInput').value;
+            if (!q) return;
+            window.open(`https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(q)}`, '_blank');
+        }
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Dictionary application initialized');
-            console.log('Performance optimization: Web Workers + Debounced Search enabled');
-        });
-
-        // Handle file input change
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                const fileName = e.target.files[0].name;
-                console.log('File selected:', fileName);
-            }
-        });
+        function enrichWord(term = '') {
+            const q = term || document.getElementById('searchInput').value;
+            if (!q) return;
+            window.open(`https://wolframalpha.com/input?i=${encodeURIComponent(q)}`, '_blank');
+        }
     </script>
 </body>
 </html>
