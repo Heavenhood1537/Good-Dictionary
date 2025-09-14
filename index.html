@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Good Dictionary</title>
+    <title>Good Dictionary - Debug Version</title>
     <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -63,6 +63,16 @@
         font-size: 14px;
         margin: 10px 0;
     }
+    .debug-info {
+        background: rgba(255,0,0,0.1);
+        border: 1px solid rgba(255,0,0,0.3);
+        border-radius: 8px;
+        padding: 10px;
+        margin: 10px 0;
+        font-family: monospace;
+        font-size: 12px;
+        color: #ffcdd2;
+    }
     .results-container {
         max-height: 600px;
         overflow-y: auto;
@@ -110,12 +120,13 @@
         font-size: 14px;
     }
     .btn-web-search { background: #2196F3; color: white; }
+    .btn-debug { background: #ff9800; color: white; }
     .btn:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
 </style>
 </head>
 <body>
     <div class="container">
-        <h1>📘 Good Dictionary</h1>
+        <h1>📘 Good Dictionary - Debug Version</h1>
 
         <div class="loading-container" id="loadingContainer">
             <div class="loading-spinner"></div>
@@ -128,13 +139,20 @@
                 <span id="searchStatus">Ready to search</span>
                 <span id="wordCount">Total words: 0</span>
             </div>
+            
+            <div class="debug-info" id="debugInfo" style="display: none;">
+                Debug info will appear here
+            </div>
+            
             <div class="results-container" id="resultsContainer">
                 <div class="no-results">Enter a search term to find words and definitions</div>
             </div>
 
             <div class="edit-controls">
-                <button class="btn btn-web-search" onclick="researchWord()">🌍 Research</button>
-                <button class="btn btn-web-search" onclick="enrichWord()">🔢 Enrich</button>
+                <button class="btn btn-web-search" onclick="researchWord()">🌐 Research</button>
+                <button class="btn btn-web-search" onclick="enrichWord()">📢 Enrich</button>
+                <button class="btn btn-debug" onclick="debugSearch()">🔍 Debug Search</button>
+                <button class="btn btn-debug" onclick="testProblematicWords()">🧪 Test Problem Words</button>
             </div>
         </div>
     </div>
@@ -143,6 +161,7 @@
         let dictionary = {};
         let searchWorker = null;
         let lastQuery = '';
+        let debugMode = false;
 
         document.addEventListener('DOMContentLoaded', () => {
             fetch('Dictionary1.json')
@@ -150,18 +169,49 @@
                 .then(data => {
                     dictionary = data;
 
-                    // Lightweight Web Worker
+                    // Enhanced Web Worker with debugging
                     const workerCode = URL.createObjectURL(new Blob([`
                         let dict = {};
                         self.onmessage = function(e) {
                             if (e.data.type === 'SET') { dict = e.data.dict; return; }
+                            if (e.data.type === 'DEBUG_SEARCH') {
+                                const q = e.data.query.trim();
+                                const ql = q.toLowerCase();
+                                let debugInfo = {
+                                    totalWords: Object.keys(dict).length,
+                                    searchQuery: q,
+                                    searchQueryLower: ql,
+                                    exactMatches: [],
+                                    partialMatches: [],
+                                    totalChecked: 0,
+                                    hitLimit: false
+                                };
+                                
+                                // Check for exact matches first
+                                for (let [word, def] of Object.entries(dict)) {
+                                    if (word === q || word.toLowerCase() === ql) {
+                                        debugInfo.exactMatches.push({word, def});
+                                    }
+                                    debugInfo.totalChecked++;
+                                    if (debugInfo.totalChecked > 10000) { // Check first 10k for debug
+                                        debugInfo.hitLimit = true;
+                                        break;
+                                    }
+                                }
+                                
+                                self.postMessage({ type: 'DEBUG_RESULT', debugInfo, query: q });
+                                return;
+                            }
                             if (e.data.type === 'SEARCH') {
                                 const q = e.data.query.trim();
                                 if (q.length < 2) { self.postMessage({results:[]}); return; }
                                 const ql = q.toLowerCase();
                                 const matches = [];
-                                // Only collect top 50
+                                let checkedCount = 0;
+                                
+                                // Remove the early break limit for now to see if that's the issue
                                 for (let [word, def] of Object.entries(dict)) {
+                                    checkedCount++;
                                     const wl = word.toLowerCase();
                                     const dl = def.toLowerCase();
                                     let p = 0;
@@ -171,17 +221,24 @@
                                     else if (wl.includes(ql)) p = 4;
                                     else if (dl.includes(ql)) p = 5;
                                     if (p) matches.push({word, def, p});
-                                    if (matches.length > 100) break; // Limit early
+                                    // Increased limit to see more results
+                                    if (matches.length > 200) break;
                                 }
-                                // Sort: priority, then alphabetically (case preserved)
+                                
                                 matches.sort((a,b) => a.p - b.p || a.word.localeCompare(b.word, undefined, {sensitivity:'base'}));
-                                self.postMessage({ results: matches.slice(0, 50), query: q });
+                                self.postMessage({ results: matches.slice(0, 50), query: q, checkedCount });
                             }
                         }
                     `], { type: 'application/javascript' }));
 
                     searchWorker = new Worker(workerCode);
-                    searchWorker.onmessage = e => displayResults(e.data.results, e.data.query);
+                    searchWorker.onmessage = e => {
+                        if (e.data.type === 'DEBUG_RESULT') {
+                            showDebugInfo(e.data.debugInfo, e.data.query);
+                        } else {
+                            displayResults(e.data.results, e.data.query, e.data.checkedCount);
+                        }
+                    };
                     searchWorker.postMessage({ type: 'SET', dict: dictionary });
 
                     // Hide loading, show UI
@@ -197,10 +254,10 @@
                         if (q.length < 2) {
                             document.getElementById('resultsContainer').innerHTML = '<div class="no-results">Enter at least 2 characters</div>';
                             document.getElementById('searchStatus').textContent = 'Ready to search';
+                            document.getElementById('debugInfo').style.display = 'none';
                             return;
                         }
                         document.getElementById('searchStatus').textContent = 'Searching...';
-                        // No debounce — instant search
                         if (q !== lastQuery) {
                             lastQuery = q;
                             searchWorker.postMessage({ type: 'SEARCH', query: q });
@@ -212,27 +269,76 @@
                 });
         });
 
-        function displayResults(results, query) {
+        function displayResults(results, query, checkedCount) {
             const container = document.getElementById('resultsContainer');
             const status = document.getElementById('searchStatus');
 
             if (results.length === 0) {
-                container.innerHTML = `<div class="no-results">No results for "${query}"</div>`;
+                container.innerHTML = `<div class="no-results">No results for "${query}"<br>Checked ${checkedCount} entries</div>`;
                 status.textContent = 'No results';
                 return;
             }
 
-            status.textContent = `Found ${results.length} results`;
+            status.textContent = `Found ${results.length} results (checked ${checkedCount} entries)`;
             container.innerHTML = results.map(r => `
                 <div class="result-item">
                     <div class="word-title">${r.word}</div>
                     <div class="word-definition">${r.def}</div>
                     <div class="edit-controls">
-                        <button class="btn btn-web-search" onclick="researchWord('${r.word}')">🌍 Research</button>
-                        <button class="btn btn-web-search" onclick="enrichWord('${r.word}')">🔢 Enrich</button>
+                        <button class="btn btn-web-search" onclick="researchWord('${r.word}')">🌐 Research</button>
+                        <button class="btn btn-web-search" onclick="enrichWord('${r.word}')">📢 Enrich</button>
                     </div>
                 </div>
             `).join('');
+        }
+
+        function showDebugInfo(debugInfo, query) {
+            const debugDiv = document.getElementById('debugInfo');
+            debugDiv.style.display = 'block';
+            debugDiv.innerHTML = `
+                <strong>Debug Information for "${query}":</strong><br>
+                Total words in dictionary: ${debugInfo.totalWords.toLocaleString()}<br>
+                Search query (original): "${debugInfo.searchQuery}"<br>
+                Search query (lowercase): "${debugInfo.searchQueryLower}"<br>
+                Exact matches found: ${debugInfo.exactMatches.length}<br>
+                Total entries checked: ${debugInfo.totalChecked.toLocaleString()}<br>
+                Hit limit: ${debugInfo.hitLimit ? 'Yes (only checked first 10,000)' : 'No'}<br>
+                ${debugInfo.exactMatches.length > 0 ? 
+                    '<br><strong>Exact matches:</strong><br>' + 
+                    debugInfo.exactMatches.slice(0, 5).map(m => `"${m.word}": "${m.def.substring(0, 100)}..."`).join('<br>')
+                    : '<br><strong>No exact matches found</strong>'
+                }
+            `;
+        }
+
+        function debugSearch() {
+            const query = document.getElementById('searchInput').value;
+            if (!query || query.length < 2) {
+                alert('Please enter a search term first');
+                return;
+            }
+            searchWorker.postMessage({ type: 'DEBUG_SEARCH', query });
+        }
+
+        function testProblematicWords() {
+            const testWords = ['thing', 'things', 'thought', 'thoughts', 'the', 'a', 'an'];
+            const results = [];
+            
+            testWords.forEach(word => {
+                if (dictionary.hasOwnProperty(word)) {
+                    results.push(`✓ "${word}" EXISTS in dictionary: "${dictionary[word].substring(0, 50)}..."`);
+                } else {
+                    // Check case-insensitive
+                    const found = Object.keys(dictionary).find(k => k.toLowerCase() === word.toLowerCase());
+                    if (found) {
+                        results.push(`⚠ "${word}" found as "${found}": "${dictionary[found].substring(0, 50)}..."`);
+                    } else {
+                        results.push(`✗ "${word}" NOT FOUND in dictionary`);
+                    }
+                }
+            });
+            
+            alert('Dictionary Test Results:\n\n' + results.join('\n'));
         }
 
         function researchWord(term = '') {
