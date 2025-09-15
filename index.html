@@ -193,7 +193,8 @@
                                         debugInfo.exactMatches.push({word, def});
                                     }
                                     debugInfo.totalChecked++;
-                                    if (debugInfo.totalChecked > 10000) { // Check first 10k for debug
+                                    // Remove debug limit to check all entries
+                                    if (debugInfo.totalChecked > 100000) { // Much higher limit for debug
                                         debugInfo.hitLimit = true;
                                         break;
                                     }
