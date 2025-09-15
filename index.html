@@ -233,6 +233,8 @@
                     `], { type: 'application/javascript' }));
 
                     searchWorker = new Worker(workerCode);
+                    // Clean up the blob URL after worker is created
+                    URL.revokeObjectURL(workerCode);
                     searchWorker.onmessage = e => {
                         if (e.data.type === 'DEBUG_RESULT') {
                             showDebugInfo(e.data.debugInfo, e.data.query);
