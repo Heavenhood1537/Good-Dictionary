@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Good Dictionary - Debug Version</title>
+    <title>Good Dictionary - Fixed Version</title>
     <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -56,6 +56,9 @@
         color: #e0f7fa;
         outline: none;
     }
+    #searchInput::placeholder {
+        color: rgba(224,247,250,0.7);
+    }
     .search-info {
         display: flex;
         justify-content: space-between;
@@ -67,11 +70,14 @@
         background: rgba(255,0,0,0.1);
         border: 1px solid rgba(255,0,0,0.3);
         border-radius: 8px;
-        padding: 10px;
+        padding: 15px;
         margin: 10px 0;
         font-family: monospace;
-        font-size: 12px;
+        font-size: 13px;
         color: #ffcdd2;
+        white-space: pre-wrap;
+        max-height: 300px;
+        overflow-y: auto;
     }
     .results-container {
         max-height: 600px;
@@ -79,6 +85,7 @@
         background: rgba(10,20,40,0.4);
         border-radius: 10px;
         padding: 15px;
+        margin-top: 15px;
     }
     .result-item {
         background: rgba(255,255,255,0.1);
@@ -86,6 +93,11 @@
         padding: 20px;
         border-radius: 10px;
         border: 1px solid rgba(79,195,247,0.2);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .result-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(79,195,247,0.2);
     }
     .word-title {
         font-size: 24px;
@@ -101,6 +113,12 @@
         color: #b3e5fc;
         margin-top: 8px;
     }
+    .match-type {
+        font-size: 12px;
+        color: #4fc3f7;
+        font-style: italic;
+        margin-bottom: 5px;
+    }
     .no-results {
         text-align: center;
         color: #7ecfff;
@@ -110,7 +128,8 @@
     .edit-controls {
         display: flex;
         gap: 10px;
-        margin-top: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
     }
     .btn {
         padding: 8px 16px;
@@ -118,19 +137,32 @@
         border-radius: 8px;
         cursor: pointer;
         font-size: 14px;
+        transition: all 0.2s;
     }
     .btn-web-search { background: #2196F3; color: white; }
     .btn-debug { background: #ff9800; color: white; }
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+    .btn-test { background: #4caf50; color: white; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .performance-stats {
+        background: rgba(76,175,80,0.1);
+        border: 1px solid rgba(76,175,80,0.3);
+        border-radius: 8px;
+        padding: 10px;
+        margin: 10px 0;
+        font-family: monospace;
+        font-size: 12px;
+        color: #c8e6c9;
+    }
 </style>
 </head>
 <body>
     <div class="container">
-        <h1>📘 Good Dictionary - Debug Version</h1>
+        <h1>📘 Good Dictionary - Enhanced Search</h1>
 
         <div class="loading-container" id="loadingContainer">
             <div class="loading-spinner"></div>
             <div>Loading Dictionary1.json...</div>
+            <div style="font-size: 14px; margin-top: 10px; color: #81d4fa;">Preparing search index for optimal performance...</div>
         </div>
 
         <div class="search-section" id="searchSection">
@@ -140,19 +172,19 @@
                 <span id="wordCount">Total words: 0</span>
             </div>
             
-            <div class="debug-info" id="debugInfo" style="display: none;">
-                Debug info will appear here
-            </div>
+            <div class="debug-info" id="debugInfo" style="display: none;"></div>
+            <div class="performance-stats" id="performanceStats" style="display: none;"></div>
             
             <div class="results-container" id="resultsContainer">
                 <div class="no-results">Enter a search term to find words and definitions</div>
             </div>
 
             <div class="edit-controls">
-                <button class="btn btn-web-search" onclick="researchWord()">🌐 Research</button>
-                <button class="btn btn-web-search" onclick="enrichWord()">📢 Enrich</button>
-                <button class="btn btn-debug" onclick="debugSearch()">🔍 Debug Search</button>
-                <button class="btn btn-debug" onclick="testProblematicWords()">🧪 Test Problem Words</button>
+                <button class="btn btn-web-search" onclick="researchWord()">🌐 Research Word</button>
+                <button class="btn btn-web-search" onclick="enrichWord()">📢 Enrich Definition</button>
+                <button class="btn btn-debug" onclick="debugSearch()">🔍 Debug Current Search</button>
+                <button class="btn btn-test" onclick="testCommonWords()">🧪 Test Common Words</button>
+                <button class="btn btn-debug" onclick="showPerformanceStats()">📊 Performance</button>
             </div>
         </div>
     </div>
@@ -161,199 +193,442 @@
         let dictionary = {};
         let searchWorker = null;
         let lastQuery = '';
-        let debugMode = false;
+        let searchStartTime = 0;
+        let totalSearches = 0;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            fetch('Dictionary1.json')
-                .then(r => r.ok ? r.json() : Promise.reject('File not found'))
-                .then(data => {
-                    dictionary = data;
+        // Enhanced search worker with better debugging and performance
+        function createSearchWorker() {
+            const workerCode = `
+                let dict = {};
+                let searchIndex = new Map();
+                let performanceStats = {
+                    totalSearches: 0,
+                    avgSearchTime: 0,
+                    lastSearchTime: 0,
+                    indexSize: 0
+                };
 
-                    // Enhanced Web Worker with debugging
-                    const workerCode = URL.createObjectURL(new Blob([`
-                        let dict = {};
-                        self.onmessage = function(e) {
-                            if (e.data.type === 'SET') { dict = e.data.dict; return; }
-                            if (e.data.type === 'DEBUG_SEARCH') {
-                                const q = e.data.query.trim();
-                                const ql = q.toLowerCase();
-                                let debugInfo = {
-                                    totalWords: Object.keys(dict).length,
-                                    searchQuery: q,
-                                    searchQueryLower: ql,
-                                    exactMatches: [],
-                                    partialMatches: [],
-                                    totalChecked: 0,
-                                    hitLimit: false
-                                };
-                                
-                                // Check for exact matches first
-                                for (let [word, def] of Object.entries(dict)) {
-                                    if (word === q || word.toLowerCase() === ql) {
-                                        debugInfo.exactMatches.push({word, def});
-                                    }
-                                    debugInfo.totalChecked++;
-                                    // Remove debug limit to check all entries
-                                    if (debugInfo.totalChecked > 100000) { // Much higher limit for debug
-                                        debugInfo.hitLimit = true;
-                                        break;
-                                    }
-                                }
-                                
-                                self.postMessage({ type: 'DEBUG_RESULT', debugInfo, query: q });
-                                return;
+                // Create search index for better performance
+                function buildSearchIndex(dictionary) {
+                    console.log('Building search index...');
+                    searchIndex.clear();
+                    
+                    for (const [word, definition] of Object.entries(dictionary)) {
+                        const wordLower = word.toLowerCase();
+                        const defLower = definition.toLowerCase();
+                        
+                        // Store original case word with lowercase key for exact matching
+                        searchIndex.set(wordLower, { word, definition, type: 'word' });
+                        
+                        // Index significant words in definitions (longer than 3 chars)
+                        const defWords = defLower.split(/\\W+/).filter(w => w.length > 3);
+                        defWords.forEach(defWord => {
+                            if (!searchIndex.has(defWord)) {
+                                searchIndex.set(defWord, []);
                             }
-                            if (e.data.type === 'SEARCH') {
-                                const q = e.data.query.trim();
-                                if (q.length < 2) { self.postMessage({results:[]}); return; }
-                                const ql = q.toLowerCase();
-                                const matches = [];
-                                let checkedCount = 0;
-                                
-                                // Remove the early break limit for now to see if that's the issue
-                                for (let [word, def] of Object.entries(dict)) {
-                                    checkedCount++;
-                                    const wl = word.toLowerCase();
-                                    const dl = def.toLowerCase();
-                                    let p = 0;
-                                    if (word === q) p = 1;
-                                    else if (wl === ql) p = 2;
-                                    else if (wl.startsWith(ql)) p = 3;
-                                    else if (wl.includes(ql)) p = 4;
-                                    else if (dl.includes(ql)) p = 5;
-                                    if (p) matches.push({word, def, p});
-                                    // Increased limit to see more results
-                                    if (matches.length > 200) break;
-                                }
-                                
-                                matches.sort((a,b) => a.p - b.p || a.word.localeCompare(b.word, undefined, {sensitivity:'base'}));
-                                self.postMessage({ results: matches.slice(0, 50), query: q, checkedCount });
+                            if (Array.isArray(searchIndex.get(defWord))) {
+                                searchIndex.get(defWord).push({ word, definition, type: 'definition' });
+                            }
+                        });
+                    }
+                    
+                    performanceStats.indexSize = searchIndex.size;
+                    console.log('Search index built with', performanceStats.indexSize, 'entries');
+                }
+
+                self.onmessage = function(e) {
+                    const startTime = performance.now();
+                    
+                    if (e.data.type === 'SET') {
+                        dict = e.data.dict;
+                        buildSearchIndex(dict);
+                        self.postMessage({ type: 'READY', indexSize: performanceStats.indexSize });
+                        return;
+                    }
+
+                    if (e.data.type === 'GET_PERFORMANCE') {
+                        self.postMessage({ type: 'PERFORMANCE', stats: performanceStats });
+                        return;
+                    }
+
+                    if (e.data.type === 'DEBUG_SEARCH') {
+                        const query = e.data.query.trim();
+                        const queryLower = query.toLowerCase();
+                        
+                        let debugInfo = {
+                            originalQuery: query,
+                            lowercaseQuery: queryLower,
+                            dictionarySize: Object.keys(dict).length,
+                            indexSize: searchIndex.size,
+                            exactWordMatch: null,
+                            partialWordMatches: [],
+                            definitionMatches: [],
+                            searchMethod: 'enhanced_index'
+                        };
+
+                        // Check exact word match
+                        if (searchIndex.has(queryLower)) {
+                            const match = searchIndex.get(queryLower);
+                            if (match.type === 'word') {
+                                debugInfo.exactWordMatch = match;
                             }
                         }
-                    `], { type: 'application/javascript' }));
 
-                    searchWorker = new Worker(workerCode);
-                    // Clean up the blob URL after worker is created
-                    URL.revokeObjectURL(workerCode);
-                    searchWorker.onmessage = e => {
-                        if (e.data.type === 'DEBUG_RESULT') {
-                            showDebugInfo(e.data.debugInfo, e.data.query);
-                        } else {
-                            displayResults(e.data.results, e.data.query, e.data.checkedCount);
+                        // Check partial word matches
+                        for (const [indexKey, indexValue] of searchIndex.entries()) {
+                            if (indexValue.type === 'word') {
+                                if (indexKey.includes(queryLower) && indexKey !== queryLower) {
+                                    debugInfo.partialWordMatches.push({ key: indexKey, value: indexValue });
+                                    if (debugInfo.partialWordMatches.length >= 10) break;
+                                }
+                            }
                         }
-                    };
-                    searchWorker.postMessage({ type: 'SET', dict: dictionary });
 
-                    // Hide loading, show UI
-                    document.getElementById('loadingContainer').style.display = 'none';
-                    document.getElementById('searchSection').style.display = 'block';
-                    document.getElementById('wordCount').textContent = `Total words: ${Object.keys(dictionary).length.toLocaleString()}`;
-                    const input = document.getElementById('searchInput');
-                    input.focus();
+                        // Check definition matches
+                        if (searchIndex.has(queryLower) && Array.isArray(searchIndex.get(queryLower))) {
+                            debugInfo.definitionMatches = searchIndex.get(queryLower).slice(0, 10);
+                        }
 
-                    // Instant search on input
-                    input.addEventListener('input', e => {
-                        const q = e.target.value;
-                        if (q.length < 2) {
-                            document.getElementById('resultsContainer').innerHTML = '<div class="no-results">Enter at least 2 characters</div>';
-                            document.getElementById('searchStatus').textContent = 'Ready to search';
-                            document.getElementById('debugInfo').style.display = 'none';
+                        // Also do a raw dictionary check for comparison
+                        debugInfo.rawDictionaryCheck = {};
+                        if (dict.hasOwnProperty(query)) {
+                            debugInfo.rawDictionaryCheck.exactCase = { found: true, definition: dict[query].substring(0, 100) + '...' };
+                        }
+                        
+                        // Case insensitive raw check
+                        const foundKey = Object.keys(dict).find(k => k.toLowerCase() === queryLower);
+                        if (foundKey) {
+                            debugInfo.rawDictionaryCheck.caseInsensitive = { 
+                                found: true, 
+                                actualKey: foundKey, 
+                                definition: dict[foundKey].substring(0, 100) + '...' 
+                            };
+                        }
+
+                        self.postMessage({ 
+                            type: 'DEBUG_RESULT', 
+                            debugInfo, 
+                            query,
+                            searchTime: performance.now() - startTime
+                        });
+                        return;
+                    }
+
+                    if (e.data.type === 'SEARCH') {
+                        const query = e.data.query.trim();
+                        if (query.length < 2) {
+                            self.postMessage({ type: 'SEARCH_RESULT', results: [], query, searchTime: 0 });
                             return;
                         }
-                        document.getElementById('searchStatus').textContent = 'Searching...';
-                        if (q !== lastQuery) {
-                            lastQuery = q;
-                            searchWorker.postMessage({ type: 'SEARCH', query: q });
+
+                        const queryLower = query.toLowerCase();
+                        const results = [];
+                        const maxResults = 50;
+
+                        // Priority 1: Exact word match
+                        if (searchIndex.has(queryLower)) {
+                            const match = searchIndex.get(queryLower);
+                            if (match.type === 'word') {
+                                results.push({ 
+                                    word: match.word, 
+                                    definition: match.definition, 
+                                    priority: 1,
+                                    matchType: 'Exact word match'
+                                });
+                            }
                         }
-                    });
+
+                        // Priority 2: Word starts with query
+                        for (const [indexKey, indexValue] of searchIndex.entries()) {
+                            if (results.length >= maxResults) break;
+                            if (indexValue.type === 'word' && indexKey.startsWith(queryLower) && indexKey !== queryLower) {
+                                results.push({
+                                    word: indexValue.word,
+                                    definition: indexValue.definition,
+                                    priority: 2,
+                                    matchType: 'Word starts with "' + query + '"'
+                                });
+                            }
+                        }
+
+                        // Priority 3: Word contains query
+                        for (const [indexKey, indexValue] of searchIndex.entries()) {
+                            if (results.length >= maxResults) break;
+                            if (indexValue.type === 'word' && indexKey.includes(queryLower) && !indexKey.startsWith(queryLower)) {
+                                results.push({
+                                    word: indexValue.word,
+                                    definition: indexValue.definition,
+                                    priority: 3,
+                                    matchType: 'Word contains "' + query + '"'
+                                });
+                            }
+                        }
+
+                        // Priority 4: Definition matches
+                        if (searchIndex.has(queryLower) && Array.isArray(searchIndex.get(queryLower))) {
+                            const defMatches = searchIndex.get(queryLower);
+                            defMatches.forEach(match => {
+                                if (results.length >= maxResults) return;
+                                // Avoid duplicates
+                                if (!results.some(r => r.word === match.word)) {
+                                    results.push({
+                                        word: match.word,
+                                        definition: match.definition,
+                                        priority: 4,
+                                        matchType: 'Definition contains "' + query + '"'
+                                    });
+                                }
+                            });
+                        }
+
+                        // Sort by priority, then alphabetically
+                        results.sort((a, b) => {
+                            if (a.priority !== b.priority) return a.priority - b.priority;
+                            return a.word.toLowerCase().localeCompare(b.word.toLowerCase());
+                        });
+
+                        const searchTime = performance.now() - startTime;
+                        performanceStats.totalSearches++;
+                        performanceStats.lastSearchTime = searchTime;
+                        performanceStats.avgSearchTime = 
+                            (performanceStats.avgSearchTime * (performanceStats.totalSearches - 1) + searchTime) / performanceStats.totalSearches;
+
+                        self.postMessage({ 
+                            type: 'SEARCH_RESULT', 
+                            results: results.slice(0, maxResults), 
+                            query,
+                            searchTime,
+                            totalChecked: searchIndex.size
+                        });
+                    }
+                };
+            `;
+
+            return new Worker(URL.createObjectURL(new Blob([workerCode], { type: 'application/javascript' })));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load dictionary
+            fetch('Dictionary1.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
                 })
-                .catch(err => {
-                    document.getElementById('loadingContainer').innerHTML = `<div style="color:#f44336">Error: ${err.message}</div>`;
+                .then(data => {
+                    dictionary = data;
+                    console.log('Dictionary loaded with', Object.keys(dictionary).length, 'entries');
+
+                    // Create and initialize worker
+                    searchWorker = createSearchWorker();
+                    searchWorker.onmessage = handleWorkerMessage;
+                    searchWorker.postMessage({ type: 'SET', dict: dictionary });
+                })
+                .catch(error => {
+                    console.error('Error loading dictionary:', error);
+                    document.getElementById('loadingContainer').innerHTML = 
+                        '<div style="color:#f44336;">Error loading Dictionary1.json: ' + error.message + 
+                        '<br><br>Make sure Dictionary1.json is in the same folder as this HTML file.</div>';
                 });
         });
 
-        function displayResults(results, query, checkedCount) {
+        function handleWorkerMessage(e) {
+            switch(e.data.type) {
+                case 'READY':
+                    // Hide loading, show search interface
+                    document.getElementById('loadingContainer').style.display = 'none';
+                    document.getElementById('searchSection').style.display = 'block';
+                    document.getElementById('wordCount').textContent = 
+                        `Total words: ${Object.keys(dictionary).length.toLocaleString()} (Index: ${e.data.indexSize.toLocaleString()})`;
+                    
+                    // Setup search input
+                    const searchInput = document.getElementById('searchInput');
+                    searchInput.focus();
+                    searchInput.addEventListener('input', handleSearchInput);
+                    break;
+
+                case 'SEARCH_RESULT':
+                    displayResults(e.data.results, e.data.query, e.data.searchTime, e.data.totalChecked);
+                    break;
+
+                case 'DEBUG_RESULT':
+                    showDebugInfo(e.data.debugInfo, e.data.query, e.data.searchTime);
+                    break;
+
+                case 'PERFORMANCE':
+                    showPerformanceStats(e.data.stats);
+                    break;
+            }
+        }
+
+        function handleSearchInput(e) {
+            const query = e.target.value;
+            
+            if (query.length < 2) {
+                document.getElementById('resultsContainer').innerHTML = 
+                    '<div class="no-results">Enter at least 2 characters to search</div>';
+                document.getElementById('searchStatus').textContent = 'Ready to search';
+                document.getElementById('debugInfo').style.display = 'none';
+                document.getElementById('performanceStats').style.display = 'none';
+                return;
+            }
+
+            if (query !== lastQuery) {
+                lastQuery = query;
+                searchStartTime = performance.now();
+                document.getElementById('searchStatus').textContent = 'Searching...';
+                searchWorker.postMessage({ type: 'SEARCH', query });
+                totalSearches++;
+            }
+        }
+
+        function displayResults(results, query, searchTime, totalChecked) {
             const container = document.getElementById('resultsContainer');
             const status = document.getElementById('searchStatus');
 
             if (results.length === 0) {
-                container.innerHTML = `<div class="no-results">No results for "${query}"<br>Checked ${checkedCount} entries</div>`;
-                status.textContent = 'No results';
+                container.innerHTML = `
+                    <div class="no-results">
+                        No results found for "${query}"<br>
+                        <small>Searched ${totalChecked.toLocaleString()} indexed entries in ${searchTime.toFixed(2)}ms</small>
+                        <br><br>
+                        <button class="btn btn-debug" onclick="debugSearch()">🔍 Debug this search</button>
+                    </div>
+                `;
+                status.textContent = 'No results found';
                 return;
             }
 
-            status.textContent = `Found ${results.length} results (checked ${checkedCount} entries)`;
-            container.innerHTML = results.map(r => `
+            status.textContent = `Found ${results.length} results in ${searchTime.toFixed(2)}ms`;
+            
+            container.innerHTML = results.map(result => `
                 <div class="result-item">
-                    <div class="word-title">${r.word}</div>
-                    <div class="word-definition">${r.def}</div>
+                    <div class="match-type">${result.matchType}</div>
+                    <div class="word-title">${escapeHtml(result.word)}</div>
+                    <div class="word-definition">${escapeHtml(result.definition)}</div>
                     <div class="edit-controls">
-                        <button class="btn btn-web-search" onclick="researchWord('${r.word}')">🌐 Research</button>
-                        <button class="btn btn-web-search" onclick="enrichWord('${r.word}')">📢 Enrich</button>
+                        <button class="btn btn-web-search" onclick="researchWord('${escapeHtml(result.word)}')">🌐 Research</button>
+                        <button class="btn btn-web-search" onclick="enrichWord('${escapeHtml(result.word)}')">📢 Enrich</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        function showDebugInfo(debugInfo, query) {
+        function showDebugInfo(debugInfo, query, searchTime) {
             const debugDiv = document.getElementById('debugInfo');
             debugDiv.style.display = 'block';
-            debugDiv.innerHTML = `
-                <strong>Debug Information for "${query}":</strong><br>
-                Total words in dictionary: ${debugInfo.totalWords.toLocaleString()}<br>
-                Search query (original): "${debugInfo.searchQuery}"<br>
-                Search query (lowercase): "${debugInfo.searchQueryLower}"<br>
-                Exact matches found: ${debugInfo.exactMatches.length}<br>
-                Total entries checked: ${debugInfo.totalChecked.toLocaleString()}<br>
-                Hit limit: ${debugInfo.hitLimit ? 'Yes (only checked first 10,000)' : 'No'}<br>
-                ${debugInfo.exactMatches.length > 0 ? 
-                    '<br><strong>Exact matches:</strong><br>' + 
-                    debugInfo.exactMatches.slice(0, 5).map(m => `"${m.word}": "${m.def.substring(0, 100)}..."`).join('<br>')
-                    : '<br><strong>No exact matches found</strong>'
-                }
-            `;
+            
+            let debugText = `🔍 Debug Information for "${query}" (${searchTime.toFixed(2)}ms)\n\n`;
+            debugText += `Dictionary Size: ${debugInfo.dictionarySize.toLocaleString()} entries\n`;
+            debugText += `Search Index Size: ${debugInfo.indexSize.toLocaleString()} entries\n`;
+            debugText += `Search Method: ${debugInfo.searchMethod}\n\n`;
+            
+            debugText += `📝 Raw Dictionary Check:\n`;
+            if (debugInfo.rawDictionaryCheck.exactCase) {
+                debugText += `  ✅ Exact case match found: "${debugInfo.rawDictionaryCheck.exactCase.definition}"\n`;
+            } else {
+                debugText += `  ❌ No exact case match\n`;
+            }
+            
+            if (debugInfo.rawDictionaryCheck.caseInsensitive) {
+                debugText += `  ✅ Case-insensitive match: "${debugInfo.rawDictionaryCheck.caseInsensitive.actualKey}"\n`;
+                debugText += `     Definition: "${debugInfo.rawDictionaryCheck.caseInsensitive.definition}"\n`;
+            } else {
+                debugText += `  ❌ No case-insensitive match found\n`;
+            }
+            
+            debugText += `\n🎯 Index Search Results:\n`;
+            if (debugInfo.exactWordMatch) {
+                debugText += `  ✅ Exact word match: "${debugInfo.exactWordMatch.word}"\n`;
+            } else {
+                debugText += `  ❌ No exact word match in index\n`;
+            }
+            
+            if (debugInfo.partialWordMatches.length > 0) {
+                debugText += `  📊 Partial matches (${debugInfo.partialWordMatches.length}):\n`;
+                debugInfo.partialWordMatches.slice(0, 5).forEach(match => {
+                    debugText += `     "${match.value.word}" (key: "${match.key}")\n`;
+                });
+            }
+            
+            if (debugInfo.definitionMatches.length > 0) {
+                debugText += `  📚 Definition matches (${debugInfo.definitionMatches.length}):\n`;
+                debugInfo.definitionMatches.slice(0, 3).forEach(match => {
+                    debugText += `     "${match.word}": "${match.definition.substring(0, 80)}..."\n`;
+                });
+            }
+
+            debugDiv.textContent = debugText;
         }
 
         function debugSearch() {
             const query = document.getElementById('searchInput').value;
             if (!query || query.length < 2) {
-                alert('Please enter a search term first');
+                alert('Please enter a search term (at least 2 characters) first');
                 return;
             }
             searchWorker.postMessage({ type: 'DEBUG_SEARCH', query });
         }
 
-        function testProblematicWords() {
-            const testWords = ['thing', 'things', 'thought', 'thoughts', 'the', 'a', 'an'];
-            const results = [];
+        function testCommonWords() {
+            const testWords = ['thing', 'things', 'thought', 'thoughts', 'the', 'good', 'word', 'meaning'];
+            let results = [];
             
             testWords.forEach(word => {
                 if (dictionary.hasOwnProperty(word)) {
-                    results.push(`✓ "${word}" EXISTS in dictionary: "${dictionary[word].substring(0, 50)}..."`);
+                    results.push(`✅ "${word}" found (exact case): "${dictionary[word].substring(0, 60)}..."`);
                 } else {
-                    // Check case-insensitive
-                    const found = Object.keys(dictionary).find(k => k.toLowerCase() === word.toLowerCase());
-                    if (found) {
-                        results.push(`⚠ "${word}" found as "${found}": "${dictionary[found].substring(0, 50)}..."`);
+                    const foundKey = Object.keys(dictionary).find(k => k.toLowerCase() === word.toLowerCase());
+                    if (foundKey) {
+                        results.push(`⚠️ "${word}" found as "${foundKey}": "${dictionary[foundKey].substring(0, 60)}..."`);
                     } else {
-                        results.push(`✗ "${word}" NOT FOUND in dictionary`);
+                        results.push(`❌ "${word}" not found in dictionary`);
                     }
                 }
             });
             
-            alert('Dictionary Test Results:\n\n' + results.join('\n'));
+            alert('Dictionary Test Results:\n\n' + results.join('\n\n'));
+        }
+
+        function showPerformanceStats() {
+            searchWorker.postMessage({ type: 'GET_PERFORMANCE' });
+        }
+
+        function showPerformanceStats(stats) {
+            const perfDiv = document.getElementById('performanceStats');
+            perfDiv.style.display = 'block';
+            perfDiv.innerHTML = `
+                <strong>Performance Statistics:</strong><br>
+                Total searches performed: ${stats.totalSearches}<br>
+                Last search time: ${stats.lastSearchTime.toFixed(2)}ms<br>
+                Average search time: ${stats.avgSearchTime.toFixed(2)}ms<br>
+                Search index size: ${stats.indexSize.toLocaleString()} entries
+            `;
         }
 
         function researchWord(term = '') {
-            const q = term || document.getElementById('searchInput').value;
-            if (!q) return;
-            window.open(`https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(q)}`, '_blank');
+            const query = term || document.getElementById('searchInput').value;
+            if (!query) {
+                alert('Please enter or select a word first');
+                return;
+            }
+            window.open(`https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(query)}`, '_blank');
         }
 
         function enrichWord(term = '') {
-            const q = term || document.getElementById('searchInput').value;
-            if (!q) return;
-            window.open(`https://wolframalpha.com/input?i=${encodeURIComponent(q)}`, '_blank');
+            const query = term || document.getElementById('searchInput').value;
+            if (!query) {
+                alert('Please enter or select a word first');
+                return;
+            }
+            window.open(`https://www.merriam-webster.com/dictionary/${encodeURIComponent(query)}`, '_blank');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     </script>
 </body>
