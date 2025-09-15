@@ -622,7 +622,7 @@
                 alert('Please enter or select a word first');
                 return;
             }
-            window.open(`https://www.merriam-webster.com/dictionary/${encodeURIComponent(query)}`, '_blank');
+            window.open(`https://wolframalpha.com/input?i=${encodeURIComponent(query)}`, '_blank');
         }
 
         function escapeHtml(text) {
