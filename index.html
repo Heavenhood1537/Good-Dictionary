@@ -182,9 +182,18 @@
             <div class="edit-controls">
                 <button class="btn btn-web-search" onclick="researchWord()">🌐 Research Word</button>
                 <button class="btn btn-web-search" onclick="enrichWord()">📢 Enrich Definition</button>
-                <button class="btn btn-debug" onclick="debugSearch()">🔍 Debug Current Search</button>
-                <button class="btn btn-test" onclick="testCommonWords()">🧪 Test Common Words</button>
-                <button class="btn btn-debug" onclick="showPerformanceStats()">📊 Performance</button>
+                <button class="btn btn-debug" onclick="toggleDeveloperTools()" id="devToolsToggle">⚙️ Developer Tools</button>
+            </div>
+            
+            <div class="developer-tools" id="developerTools" style="display: none;">
+                <div style="margin: 15px 0; padding: 15px; background: rgba(255,152,0,0.1); border: 1px solid rgba(255,152,0,0.3); border-radius: 8px;">
+                    <h4 style="color: #ffb74d; margin-bottom: 10px;">Developer & Debug Tools</h4>
+                    <div class="edit-controls">
+                        <button class="btn btn-debug" onclick="debugSearch()">🔍 Debug Current Search</button>
+                        <button class="btn btn-test" onclick="testCommonWords()">🧪 Test Common Words</button>
+                        <button class="btn btn-debug" onclick="showPerformanceStats()">📊 Performance</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -623,6 +632,21 @@
                 return;
             }
             window.open(`https://wolframalpha.com/input?i=${encodeURIComponent(query)}`, '_blank');
+        }
+
+        function toggleDeveloperTools() {
+            const devTools = document.getElementById('developerTools');
+            const toggleBtn = document.getElementById('devToolsToggle');
+            
+            if (devTools.style.display === 'none') {
+                devTools.style.display = 'block';
+                toggleBtn.textContent = '⚙️ Hide Developer Tools';
+                toggleBtn.style.backgroundColor = '#f44336';
+            } else {
+                devTools.style.display = 'none';
+                toggleBtn.textContent = '⚙️ Developer Tools';
+                toggleBtn.style.backgroundColor = '#ff9800';
+            }
         }
 
         function escapeHtml(text) {
