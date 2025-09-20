@@ -88,7 +88,7 @@ Case insensitive: Search works regardless of capitalization
 
 📊 Statistics
 
-Total Words: 30,760+
+Total Words: 50,000+
 Average Definition Length: ~550 characters
 File Size: 16.8MB+
 Search Performance: Instant results across all entries
@@ -96,14 +96,12 @@ Mobile Friendly: Responsive design for all devices
 
 🎯 Future Plans
 
-Expand to 50,000+ entries
+Expand to 70,000+ entries
 Add word categories and tags
 Implement advanced filtering options
 Add pronunciation guides where relevant
 Include more cross-references between related terms
 
 📄 License
-This dictionary is a personal collection compiled with care and dedication to the beauty of language.
+This dictionary is a personal collection compiled with care and dedication to the beauty of language. It is licenced under a free public use MIT licence, Licence file might be found in the same GitHub's repository named Good-Dictionary.
 
-"Language is the dress of thought." - Samuel Johnson
-Created with ❤️ by a lover of words and their meanings
