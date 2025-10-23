@@ -1,7 +1,7 @@
 Dictionary of Good Meaning Words
-A comprehensive collection of meaningful English words with rich, detailed definitions that celebrate the beauty and depth of language.
+A comprehensive collection of meaningful English words with rich, detailed definitions that celebrate the beauty and depth of language. 
 📖 About This Dictionary
-This dictionary focuses on words with positive, meaningful, and enriching connotations. Each entry provides not just a definition, but context, etymology, and the deeper significance of the word. Currently contains 30,760+ entries and growing.
+This dictionary focuses on words with positive, meaningful, and enriching connotations (my apologies if some word escaped my positive words only filtering). Each entry provides not just a definition, but context, etymology, and the deeper significance of the word. Currently contains  60,003 entries and growing. 
 ✨ Features
 
 Comprehensive Search: Search both word titles and definition content
@@ -55,8 +55,8 @@ Open http://localhost:8000 in your browser
 📈 Growth Stats
 
 Started: [Your start date]
-Current Entries: 30,760+
-Target: 50,000+ entries
+Current Entries: 60,003 
+Target: 70,000 entries
 Daily Addition: Hundreds to thousands of new entries
 Update Frequency: Regular batches via GitHub
 
@@ -88,9 +88,9 @@ Case insensitive: Search works regardless of capitalization
 
 📊 Statistics
 
-Total Words: 50,000+
+Total Words:  60,003
 Average Definition Length: ~550 characters
-File Size: 16.8MB+
+File Size: 33.8MB
 Search Performance: Instant results across all entries
 Mobile Friendly: Responsive design for all devices
 
@@ -104,4 +104,5 @@ Include more cross-references between related terms
 
 📄 License
 This dictionary is a personal collection compiled with care and dedication to the beauty of language. It is licenced under a free public use MIT licence, Licence file might be found in the same GitHub's repository named Good-Dictionary.
+
 
