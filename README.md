@@ -12,7 +12,7 @@ Clean Interface: Beautiful, responsive design that works on all devices
 Fast Performance: Optimized for quick browsing of thousands of entries
 
 🚀 Live Demo
-Visit the live dictionary at: https://[your-username].github.io/[repository-name]
+Visit the live dictionary at: https://heavenhood1537.github.io/Good-Dictionary/
 
 📱 How to Use
 Browse: Scroll through all entries or use the search function
@@ -31,11 +31,11 @@ Search: Client-side search for instant results
 dictionary/
 ├── index.html          # Main dictionary interface
 ├── Dictionary1.json    # Dictionary data (30,760+ entries)
-├── README.md          # This file
-└── docs/              # Additional documentation (optional)
+├── README.md           # This file
+└── LICENCE             # MIT Free use Public Licence
+
 🔧 Local Development
 To run locally:
-
 Clone this repository
 Ensure Dictionary1.json is in the same folder as index.html
 Open index.html in a web browser
@@ -99,6 +99,7 @@ Include more cross-references between related terms
 
 📄 License
 This dictionary is a personal collection compiled with care and dedication to the beauty of language. It is licenced under a free public use MIT licence, Licence file might be found in the same GitHub's repository named Good-Dictionary.
+
 
 
 
