@@ -24,6 +24,7 @@ Clean Interface: Beautiful, responsive design that works on all devices
 Fast Performance: Optimized for quick browsing of thousands of entries
 
 🚀 Live Demo
+
 Visit the live dictionary at: https://[your-username].github.io/[repository-name]
 📱 How to Use
 
@@ -41,6 +42,7 @@ Hosting: GitHub Pages for free, reliable hosting
 Search: Client-side search for instant results
 
 📂 File Structure
+
 dictionary/
 ├── index.html          # Main dictionary interface
 ├── Dictionary1.json    # Dictionary data (30,760+ entries)
@@ -73,6 +75,7 @@ Daily Addition: Hundreds to thousands of new entries
 Update Frequency: Regular batches via GitHub
 
 🤝 Contributing
+
 This is a personal passion project by a retired language enthusiast. The dictionary grows through:
 
 Careful curation of meaningful words
@@ -81,6 +84,7 @@ Focus on positive and enriching vocabulary
 Regular batch updates and improvements
 
 📝 Philosophy
+
 This dictionary believes that words have the power to:
 
 Shape our thoughts and perspectives
@@ -117,10 +121,4 @@ Include more cross-references between related terms
 📄 License
 
 This dictionary is a personal collection compiled with care and dedication to the beauty of language. It is licenced under a free public use MIT licence, Licence file might be found in the same GitHub's repository named Good-Dictionary.
-
-
-
-
-
-
 
